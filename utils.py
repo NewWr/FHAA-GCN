@@ -114,33 +114,6 @@ def one_hot_embedding(labels, num_classes, soft):
     y = torch.eye(num_classes)
     return y[soft]
 
-
-# 特征提取 重要性计算 增量搜索 最佳特征子集
-def fre_statis(fc1_w, fc2_w, fc3_w, output1_fc3, p_l, e_l):
-    real_label = e_l
-    e_l = torch.FloatTensor(onehot_encode(e_l.tolist()))
-    prob = (e_l * p_l).to(device)
-    grad_fc = torch.div(prob, output1_fc3)
-    grad_fc3 = torch.matmul(grad_fc, fc3_w)
-    grad_fc2 = torch.matmul(grad_fc3, fc2_w)
-    grad_fc1 = torch.matmul(grad_fc2, fc1_w)
-    grad_fc1 = grad_fc1.reshape(len(e_l), 116, 116)
-
-    # sort_fc, sort_index = torch.sort(grad_fc1, dim=1, descending=True)
-    # sort_fc, sort_index = torch.sort(sort_fc, dim=1, descending=True)
-    temp_bad = 0
-    temp_good = 0
-    best_fc_bad = torch.FloatTensor()
-    best_fc_good = torch.FloatTensor()
-    for i in range(grad_fc1.shape[0]):
-        if torch.sum(grad_fc1[i]) < temp_bad and real_label[i] == 0:
-            best_fc_bad = grad_fc1[i]
-        if torch.sum(grad_fc1[i]) > temp_good and real_label[i] == 1:
-            best_fc_good = grad_fc1[i]
-
-    return best_fc_bad, best_fc_good
-
-
 def fre_statis_myself(fc1_w, fc2_w, fc3_w, output_fc3, conv1_w, conv2_w, p_l, e_l):
     real_label = e_l
     importance3 = torch.mm(output_fc3[2], fc3_w)
@@ -158,12 +131,6 @@ def fre_statis_myself(fc1_w, fc2_w, fc3_w, output_fc3, conv1_w, conv2_w, p_l, e_
     best_fc_bad_max = torch.FloatTensor()
     best_fc_good_min = torch.FloatTensor()
     best_fc_good_max = torch.FloatTensor()
-    # for i in range(importance1.shape[0]):
-    #     if torch.sum(importance1[i]) > temp_bad and real_label[i] == 0:
-    #         best_fc_bad = importance1[i]
-    #     if torch.sum(importance1[i]) > temp_good and real_label[i] == 1:
-    #         best_fc_good = importance1[i]
-
     for i in range(importance_final.shape[0]):
         if torch.sum(importance_final[i]) < temp_bad_min and real_label[i] == 0:
             best_fc_bad_min = importance_final[i]
