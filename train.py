@@ -176,8 +176,6 @@ conv1_w = model.state_dict()['conv1.weight']
 
 prob_label = out_data[0: batch]
 real_la = real_data[0: batch]
-# best_fc_bad, best_fc_good = fre_statis(fc1_w, fc2_w, fc3_w, output1_fc3, prob_label, real_la)
-# gene_bad, roi_bad, gene_good, roi_good = find_roi(best_fc_bad, best_fc_good)
 
 best_fc_bad_min, best_fc_bad_max, best_fc_good_max, best_fc_good_min = fre_statis_myself(fc1_w, fc2_w, fc3_w, output1_fc3, conv1_w, conv2_w, prob_label, real_la)
 gene_bad, roi_bad, gene_good, roi_good = find_roi(best_fc_bad_min, best_fc_bad_max)
