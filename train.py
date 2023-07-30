@@ -28,7 +28,6 @@ loss_func = FocalLoss()
 
 # MLP pre-train
 model_MLP = MLP(n_feat=116, n_hid=116, nclass=2, dropout=0.5).to(device)
-# optimizer_mlp = Lion(model_MLP.parameters(), lr=0.0001, weight_decay=1e-6)
 optimizer_mlp = optim.Adam(model_MLP.parameters(), lr=0.0001, weight_decay=1e-5)
 mlp_acc = 0
 
@@ -38,11 +37,8 @@ for i in range(30):
                                 train_weight.to(device), train_sim.to(device), train_edge.to(device)
         optimizer_mlp.zero_grad()
         output_mlp_w = model_MLP.forward(train_sim).to(device)
-        # acc_mlp = accuracy_mlp(output_mlp_w, train_type1).to(device)
         acc_mlp, right_mlp, miss_mlp = accuracy(output_mlp_w, train_type1)
-        # loss_mlp = F.nll_loss(output_mlp_w, train_type1).to(device)
         loss_mlp = loss_func(output_mlp_w, train_type1, right_mlp, miss_mlp).to(device)
-        # loss_mlp = loss_func_ce(output_mlp_w, train_type1).to(device)
         loss_mlp.backward()
         optimizer_mlp.step()
         print('Epoch: {:04d}'.format(i + 1), 'loss_train_mlp: {:.4f}'.format(loss_mlp.item()),
@@ -53,8 +49,6 @@ for i in range(30):
         model_MLP.eval()
         output_mlp1_w = model_MLP(test_sim).to(device)
         acc_test_mlp = accuracy_mlp(output_mlp1_w, test_type1).to(device)
-        # loss_mlp_test = F.nll_loss(output_mlp1_w, test_type1).to(device)
-        # loss_mlp_test = loss_func(output_mlp_w, train_type1, right_mlp, miss_mlp).to(device)
         loss_mlp_test = loss_func_ce(output_mlp_w, train_type1).to(device)
         print('testSet:''loss: {:.4f}'.format(loss_mlp_test.item()), 'acc: {:.4f}'.format(acc_test_mlp.item()))
 
@@ -69,7 +63,6 @@ print("~~~~~~~~~~~~~~~~~~MLP finish~~~~~~~~~~~~~~~~~~~~~~")
 labels_for_mlp_w = one_hot_embedding(train_type1, train_type1.max().item() + 1, mlp_w).type(torch.FloatTensor)
 labels_for_mlp1_w = one_hot_embedding(test_type1, test_type1.max().item() + 1, mlp1_w).type(torch.FloatTensor)
 
-# 同质性矩阵的引入
 adj1_train, sadj1_train = load_graph(train_edge)
 bi_adj1_train = adj1_train.matmul(adj1_train)
 
@@ -106,7 +99,6 @@ for epoch in range(Epoch):
         output, output_fc3, prob_label = model(d_w, d_p, d_s, d_mw, d_adj, d_biadj, output_mlp_softlabel)
         acc_val, right, miss = accuracy(output, d_t)
         loss = loss_func(output, d_t, right, miss).to(device)
-        # loss = loss_func_ce(output, d_t).to(device)
         # 同质性矩阵loss
         loss_lp_sum = 0
         for t in range(output_mlp_softlabel.shape[0]):
@@ -119,12 +111,6 @@ for epoch in range(Epoch):
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         print('Epoch: {:04d}'.format(epoch + 1), 'loss_train: {:.4f}'.format(loss.item()),
               'acc_val: {:.4f}'.format(acc_val.item()))
-
-        # if epoch == Epoch-1:
-        #     if output.shape[0] == batch:
-        #         out_data[step*batch:(step+1)*output.shape[0], :] = output
-        #         real_data[step*batch:(step+1)*d_t.shape[0]] = d_t
-
         if epoch % 1 == 0:
             model.eval()
             model_MLP_softlabel.eval()
